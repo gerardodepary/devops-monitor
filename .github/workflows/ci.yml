@@ -1,33 +1,40 @@
-name: DevOps Monitor CI
+name: DevOps Monitor CI-CD
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
-    name: Build Docker Images
+  build-and-publish:
+    name: Build and Publish Docker Images
     runs-on: ubuntu-latest
 
     steps:
       - name: Recuperer le code source
         uses: actions/checkout@v4
 
-      - name: Construire image Backend
-        run: |
-          docker build \
-            -t devops-monitor-backend:latest \
-            ./application/backend
+      - name: Se connecter a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construire image Frontend
-        run: |
-          docker build \
-            -t devops-monitor-frontend:latest \
-            ./application/frontend
+      - name: Construire et publier Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./application/backend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/devops-monitor-backend:latest
 
-      - name: Afficher les images construites
-        run: docker images
+      - name: Construire et publier Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./application/frontend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/devops-monitor-frontend:latestgit
