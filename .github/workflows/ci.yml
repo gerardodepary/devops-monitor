@@ -1,0 +1,33 @@
+name: DevOps Monitor CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code source
+        uses: actions/checkout@v4
+
+      - name: Construire image Backend
+        run: |
+          docker build \
+            -t devops-monitor-backend:latest \
+            ./application/backend
+
+      - name: Construire image Frontend
+        run: |
+          docker build \
+            -t devops-monitor-frontend:latest \
+            ./application/frontend
+
+      - name: Afficher les images construites
+        run: docker images
